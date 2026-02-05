@@ -1,0 +1,215 @@
+{
+  "common": {
+    "loading": "読み込み中...",
+    "error": "エラーが発生しました",
+    "retry": "再試行",
+    "cancel": "キャンセル",
+    "confirm": "確認",
+    "save": "保存",
+    "delete": "削除",
+    "edit": "編集",
+    "done": "完了",
+    "next": "次へ",
+    "back": "戻る",
+    "close": "閉じる",
+    "search": "検索",
+    "ok": "OK"
+  },
+  "auth": {
+    "welcome": {
+      "title": "Circlesへようこそ",
+      "subtitle": "小さなグループでつながりを見つけよう",
+      "slide1Title": "少人数グループでのつながり",
+      "slide1Description": "興味や場所が近い4〜5人とマッチング",
+      "slide2Title": "毎週のプロンプト",
+      "slide2Description": "楽しいアクティビティや会話のきっかけが届きます",
+      "slide3Title": "新しい友達と出会う",
+      "slide3Description": "1対1のプレッシャーなしでグループで繋がろう",
+      "getStarted": "始める"
+    },
+    "phone": {
+      "title": "電話番号を入力",
+      "subtitle": "確認コードを送信します",
+      "placeholder": "電話番号",
+      "continue": "続ける"
+    },
+    "verify": {
+      "title": "番号を確認",
+      "subtitle": "送信された6桁のコードを入力",
+      "resend": "コードを再送信",
+      "resendIn": "{{seconds}}秒後に再送信"
+    }
+  },
+  "onboarding": {
+    "name": {
+      "title": "お名前は？",
+      "subtitle": "他のユーザーに表示される名前です",
+      "placeholder": "お名前"
+    },
+    "location": {
+      "title": "どこにお住まいですか？",
+      "subtitle": "近くのサークルやアクティビティを見つけます",
+      "useLocation": "現在地を使用",
+      "searchPlaceholder": "都市を検索"
+    },
+    "languages": {
+      "title": "何語を話しますか？",
+      "subtitle": "該当するものをすべて選択"
+    },
+    "interests": {
+      "title": "興味があることは？",
+      "subtitle": "3つ以上選んでください",
+      "selected": "{{count}}個選択中"
+    },
+    "bio": {
+      "title": "自己紹介",
+      "subtitle": "オプション - 他の人に自分を知ってもらおう",
+      "placeholder": "私について...",
+      "skip": "スキップ"
+    }
+  },
+  "home": {
+    "title": "サークル",
+    "findingCircle": "サークルを探しています...",
+    "inQueue": "待ち順位: {{position}}番目",
+    "findCircle": "サークルを見つける",
+    "joinQueue": "マッチングに参加",
+    "joinQueueDescription": "マッチングに参加すると、興味や場所に基づいて最適なサークルを見つけます。",
+    "browseActivities": "近くのアクティビティを見る",
+    "thisWeeksPrompt": "今週のプロンプト",
+    "openChat": "チャットを開く",
+    "members": "{{count}}人のメンバー"
+  },
+  "circle": {
+    "leaveTitle": "サークルを離れる",
+    "leaveMessage": "本当にこのサークルを離れますか？",
+    "leave": "離れる",
+    "startConversation": "会話を始めよう",
+    "startConversationDescription": "サークルのメンバーに挨拶しよう！仲良くなろう。"
+  },
+  "activities": {
+    "title": "アクティビティ",
+    "create": "アクティビティを作成",
+    "noActivities": "近くにアクティビティがありません",
+    "noActivitiesDescription": "最初にアクティビティを作成して、新しい人と出会おう！",
+    "joined": "{{current}}/{{max}}人参加",
+    "requestToJoin": "参加をリクエスト",
+    "pending": "承認待ち",
+    "leave": "離れる",
+    "openChat": "チャットを開く",
+    "activityFull": "満員です",
+    "activityEnded": "終了しました"
+  },
+  "createActivity": {
+    "title": "アクティビティを作成",
+    "activityTitle": "タイトル",
+    "titlePlaceholder": "例: 朝のコーヒー会",
+    "description": "説明（任意）",
+    "descriptionPlaceholder": "どんなことをするか教えてください...",
+    "location": "場所",
+    "locationPlaceholder": "タップして現在地を使用",
+    "dateTime": "日時",
+    "maxParticipants": "最大参加人数",
+    "people": "人",
+    "includingYourself": "自分を含む（2〜8人）",
+    "create": "アクティビティを作成"
+  },
+  "chat": {
+    "placeholder": "メッセージを入力...",
+    "reconnecting": "再接続中...",
+    "isTyping": "{{name}}が入力中",
+    "areTyping": "{{name}}と他{{count}}人が入力中"
+  },
+  "settings": {
+    "title": "設定",
+    "preferences": "設定",
+    "notifications": "通知",
+    "notificationsOn": "オン",
+    "notificationsOff": "オフ",
+    "language": "言語",
+    "distanceUnit": "距離の単位",
+    "kilometers": "キロメートル",
+    "miles": "マイル",
+    "account": "アカウント",
+    "editProfile": "プロフィールを編集",
+    "privacySafety": "プライバシーとセキュリティ",
+    "support": "サポート",
+    "helpCenter": "ヘルプセンター",
+    "termsOfService": "利用規約",
+    "privacyPolicy": "プライバシーポリシー",
+    "signOut": "サインアウト",
+    "version": "Circles v{{version}}"
+  },
+  "notificationSettings": {
+    "title": "通知",
+    "pushNotifications": "プッシュ通知",
+    "pushDescription": "デバイスで通知を受け取る",
+    "types": "通知の種類",
+    "messages": "メッセージ",
+    "messagesDescription": "サークルやアクティビティの新着メッセージ",
+    "prompts": "週間プロンプト",
+    "promptsDescription": "サークルの新しいプロンプト",
+    "activityUpdates": "アクティビティの更新",
+    "activityUpdatesDescription": "参加リクエスト、承認、リマインダー",
+    "manageInDevice": "デバイスの設定からも通知を管理できます。"
+  },
+  "languageSettings": {
+    "title": "言語",
+    "description": "アプリの表示言語を選択してください。",
+    "comingSoon": "他の言語も近日対応予定！"
+  },
+  "accountSettings": {
+    "title": "プライバシーとセキュリティ",
+    "privacy": "プライバシー",
+    "blockedUsers": "ブロックしたユーザー",
+    "blockedUsersDescription": "ブロックしたアカウントを管理",
+    "locationPrivacy": "位置情報のプライバシー",
+    "locationPrivacyDescription": "他のユーザーには市区町村レベルのみ表示",
+    "safety": "セキュリティ",
+    "safetyTips": "安全のヒント",
+    "safetyTipsDescription": "会う時のベストプラクティス",
+    "reportProblem": "問題を報告",
+    "reportProblemDescription": "問題や懸念を報告",
+    "yourData": "あなたのデータ",
+    "requestData": "データをリクエスト",
+    "requestDataDescription": "あなたのデータのコピーを取得",
+    "dangerZone": "危険ゾーン",
+    "deleteAccount": "アカウントを削除",
+    "deleteAccountDescription": "アカウントとすべてのデータが完全に削除されます。この操作は取り消せません。",
+    "deleteConfirmTitle": "アカウントを削除",
+    "deleteConfirmMessage": "本当によろしいですか？アカウント、すべてのデータが完全に削除され、元に戻せません。サークルとすべてのアクティビティから削除されます。",
+    "yesDelete": "はい、削除します"
+  },
+  "profile": {
+    "title": "プロフィール"
+  },
+  "report": {
+    "title": "報告",
+    "reason": "理由",
+    "harassment": "ハラスメント",
+    "spam": "スパム",
+    "inappropriate": "不適切なコンテンツ",
+    "noShow": "ドタキャン",
+    "other": "その他",
+    "details": "詳細（任意）",
+    "detailsPlaceholder": "何が起きたか詳しく教えてください...",
+    "submit": "報告を送信",
+    "success": "報告が送信されました。Circlesを安全に保つためにご協力ありがとうございます。"
+  },
+  "block": {
+    "title": "ユーザーをブロック",
+    "message": "{{name}}をブロックしますか？ブロックすると、相手はあなたのプロフィールを見たり、やり取りしたりできなくなります。",
+    "confirm": "ブロック",
+    "success": "ユーザーをブロックしました"
+  },
+  "errors": {
+    "networkError": "ネットワークエラー。接続を確認してください。",
+    "serverError": "サーバーエラー。後でもう一度お試しください。",
+    "unauthorized": "セッションが切れました。再度サインインしてください。",
+    "notFound": "見つかりません",
+    "invalidPhone": "有効な電話番号を入力してください",
+    "invalidCode": "無効な確認コード",
+    "locationRequired": "場所は必須です",
+    "titleRequired": "タイトルは必須です"
+  }
+}

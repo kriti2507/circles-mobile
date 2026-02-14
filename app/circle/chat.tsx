@@ -81,8 +81,8 @@ export default function CircleChatScreen() {
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <EmptyState
           title="No Circle"
-          message="You're not in a circle yet. Join the matching queue to get matched."
-          actionTitle="Go Back"
+          description="You're not in a circle yet. Join the matching queue to get matched."
+          actionLabel="Go Back"
           onAction={handleBack}
         />
       </View>
@@ -140,8 +140,7 @@ export default function CircleChatScreen() {
           <View style={styles.emptyContainer}>
             <EmptyState
               title="Start the Conversation"
-              message="Say hello to your circle members! Break the ice and get to know each other."
-              icon="chatbubbles-outline"
+              description="Say hello to your circle members! Break the ice and get to know each other."
             />
           </View>
         ) : (

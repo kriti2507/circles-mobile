@@ -96,8 +96,8 @@ export default function ActivityChatScreen() {
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <EmptyState
           title="Activity Not Found"
-          message="This activity may have been deleted."
-          actionTitle="Go Back"
+          description="This activity may have been deleted."
+          actionLabel="Go Back"
           onAction={handleBack}
         />
       </View>
@@ -158,8 +158,7 @@ export default function ActivityChatScreen() {
           <View style={styles.emptyContainer}>
             <EmptyState
               title="Start Planning"
-              message="Coordinate with other participants for the activity!"
-              icon="chatbubbles-outline"
+              description="Coordinate with other participants for the activity!"
             />
           </View>
         ) : (

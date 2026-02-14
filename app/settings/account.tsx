@@ -206,7 +206,7 @@ export default function AccountScreen() {
         confirmText="Yes, Delete My Account"
         cancelText="Cancel"
         onConfirm={handleDeleteAccount}
-        onCancel={() => setShowDeleteDialog(false)}
+        onClose={() => setShowDeleteDialog(false)}
         destructive
       />
     </View>

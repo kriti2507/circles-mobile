@@ -22,13 +22,7 @@ export interface VerifyCodeRequest {
 export interface VerifyCodeResponse {
   token: string;
   refreshToken: string;
-  user: {
-    id: string;
-    phone: string;
-    phoneVerified: boolean;
-    displayName?: string;
-    status: string;
-  };
+  user: import('./index').User;
   isNewUser: boolean;
 }
 

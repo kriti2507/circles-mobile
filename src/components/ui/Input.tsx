@@ -25,7 +25,7 @@ interface InputProps extends Omit<TextInputProps, 'style'> {
   rightIcon?: React.ReactNode;
   onRightIconPress?: () => void;
   containerStyle?: ViewStyle;
-  inputStyle?: ViewStyle;
+  inputStyle?: import('react-native').TextStyle;
 }
 
 export const Input = forwardRef<TextInput, InputProps>(
@@ -73,8 +73,8 @@ export const Input = forwardRef<TextInput, InputProps>(
             ref={ref}
             style={[
               styles.input,
-              leftIcon && styles.inputWithLeftIcon,
-              rightIcon && styles.inputWithRightIcon,
+              leftIcon ? styles.inputWithLeftIcon : undefined,
+              rightIcon ? styles.inputWithRightIcon : undefined,
               inputStyle,
             ]}
             placeholderTextColor={Colors.textMuted}

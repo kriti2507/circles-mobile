@@ -11,4 +11,3 @@ export { Badge, CountBadge, StatusDot } from './Badge';
 export { Chip, FilterChip, InterestChip } from './Chip';
 export { Loading, LoadingOverlay, Skeleton } from './Loading';
 export { EmptyState } from './EmptyState';
-export { Header } from './Header';

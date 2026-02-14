@@ -21,8 +21,10 @@ import { Button } from '../../src/components/ui/Button';
 import { Colors } from '../../src/constants/colors';
 import { FontFamily, FontSize } from '../../src/constants/typography';
 import { Spacing, BorderRadius } from '../../src/constants/spacing';
-import { DEV_SKIP_AUTH, DEV_MOCK_USER, DEV_MOCK_TOKENS, DEV_MOCK_SETTINGS } from '../../src/constants/config';
+import { DEV_SKIP_AUTH } from '../../src/constants/config';
 import { useAuthStore } from '../../src/stores/authStore';
+import { authService } from '../../src/services/auth';
+import { socketService } from '../../src/services/socket';
 
 const { width } = Dimensions.get('window');
 
@@ -62,12 +64,25 @@ export default function WelcomeScreen() {
   const insets = useSafeAreaInsets();
   const flatListRef = useRef<FlatList>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [devLoading, setDevLoading] = useState(false);
   const login = useAuthStore((state) => state.login);
 
-  // Development only: Skip authentication
-  const handleDevLogin = () => {
-    if (DEV_SKIP_AUTH) {
-      login(DEV_MOCK_USER, DEV_MOCK_TOKENS, DEV_MOCK_SETTINGS);
+  // Development only: authenticate with real backend tokens
+  const handleDevLogin = async () => {
+    if (!DEV_SKIP_AUTH) return;
+    setDevLoading(true);
+    try {
+      const result = await authService.devLogin();
+      login(
+        result.user,
+        { accessToken: result.token, refreshToken: result.refreshToken }
+      );
+      socketService.connect();
+      router.replace('/(tabs)');
+    } catch (err) {
+      console.warn('Dev login failed:', err);
+    } finally {
+      setDevLoading(false);
     }
   };
 
@@ -159,9 +174,15 @@ export default function WelcomeScreen() {
         </View>
 
         {DEV_SKIP_AUTH && (
-          <TouchableOpacity style={styles.devLoginButton} onPress={handleDevLogin}>
+          <TouchableOpacity
+            style={[styles.devLoginButton, devLoading && { opacity: 0.5 }]}
+            onPress={handleDevLogin}
+            disabled={devLoading}
+          >
             <Ionicons name="code-slash" size={16} color={Colors.warning} />
-            <Text style={styles.devLoginText}>Dev Login (Skip Auth)</Text>
+            <Text style={styles.devLoginText}>
+              {devLoading ? 'Signing in...' : 'Dev Login (Skip Auth)'}
+            </Text>
           </TouchableOpacity>
         )}
       </View>

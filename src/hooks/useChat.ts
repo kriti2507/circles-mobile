@@ -34,7 +34,7 @@ export const useChat = ({ roomType, roomId }: UseChatOptions) => {
   } = useChatStore();
 
   const [error, setError] = useState<string | null>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isTypingRef = useRef(false);
 
   // Get room data

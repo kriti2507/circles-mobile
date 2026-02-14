@@ -3,7 +3,7 @@
  * Circle view or waiting state
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   ScrollView,
   RefreshControl,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -42,6 +43,8 @@ export default function HomeScreen() {
     joinQueue,
   } = useCircle();
 
+  const [isJoining, setIsJoining] = useState(false);
+
   useEffect(() => {
     fetchCircle();
   }, [fetchCircle]);
@@ -51,10 +54,16 @@ export default function HomeScreen() {
   };
 
   const handleJoinQueue = async () => {
+    setIsJoining(true);
     try {
       await joinQueue();
-    } catch (err) {
-      // Error handled in hook
+    } catch (err: any) {
+      Alert.alert(
+        'Could not join queue',
+        err?.message || 'Something went wrong. Please try again.',
+      );
+    } finally {
+      setIsJoining(false);
     }
   };
 
@@ -174,6 +183,7 @@ export default function HomeScreen() {
               <Button
                 title="Join Matching Queue"
                 onPress={handleJoinQueue}
+                loading={isJoining}
                 size="lg"
                 style={styles.joinButton}
               />

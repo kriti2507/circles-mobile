@@ -63,6 +63,18 @@ export const authService = {
   },
 
   /**
+   * Dev login — get real tokens from the backend for a test user
+   */
+  async devLogin(): Promise<VerifyCodeResponse> {
+    try {
+      const response = await api.post<VerifyCodeResponse>('/auth/dev-login');
+      return response.data;
+    } catch (error) {
+      throw parseApiError(error);
+    }
+  },
+
+  /**
    * Logout and invalidate tokens
    */
   async logout(): Promise<void> {

@@ -68,7 +68,7 @@ export default function CreateActivityScreen() {
     if (loc) {
       setFormData((prev) => ({
         ...prev,
-        locationName: loc.city ? `${loc.city}, ${loc.country || ''}` : 'Current Location',
+        locationName: loc.city ? `${loc.city}, ${loc.countryCode || ''}` : 'Current Location',
         latitude: loc.latitude,
         longitude: loc.longitude,
       }));
@@ -148,8 +148,9 @@ export default function CreateActivityScreen() {
       });
 
       router.replace(`/activity/${activity.id}`);
-    } catch (err) {
-      Alert.alert('Error', 'Failed to create activity. Please try again.');
+    } catch (err: any) {
+      const message = err?.message || 'Failed to create activity. Please try again.';
+      Alert.alert('Error', message);
     } finally {
       setIsSubmitting(false);
     }

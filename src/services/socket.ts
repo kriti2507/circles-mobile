@@ -112,6 +112,20 @@ class SocketService {
   }
 
   /**
+   * Register an event listener on the socket
+   */
+  on(event: string, handler: (...args: any[]) => void): void {
+    this.socket?.on(event, handler);
+  }
+
+  /**
+   * Remove an event listener from the socket
+   */
+  off(event: string, handler: (...args: any[]) => void): void {
+    this.socket?.off(event, handler);
+  }
+
+  /**
    * Set up event handlers
    */
   private setupEventHandlers(): void {
@@ -137,6 +151,10 @@ class SocketService {
         console.error('Max reconnection attempts reached');
         this.disconnect();
       }
+    });
+
+    this.socket.on('error', (data: { message: string }) => {
+      console.error('Socket server error:', data.message);
     });
 
     // Chat events

@@ -8,3 +8,4 @@ export { usersService } from './users';
 export { circlesService } from './circles';
 export { activitiesService } from './activities';
 export { socketService } from './socket';
+export { realtimeService } from './realtime';

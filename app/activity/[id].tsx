@@ -213,10 +213,10 @@ export default function ActivityDetailScreen() {
           <View style={styles.badges}>
             <Badge
               label={currentActivity.status.toUpperCase()}
-              variant={currentActivity.status === 'open' ? 'primary' : 'muted'}
+              variant={currentActivity.status === 'open' ? 'primary' : 'default'}
               size="sm"
             />
-            {isPast && <Badge label="PAST" variant="muted" size="sm" />}
+            {isPast && <Badge label="PAST" variant="default" size="sm" />}
           </View>
           <Text style={styles.title}>{currentActivity.title}</Text>
         </View>
@@ -391,9 +391,9 @@ export default function ActivityDetailScreen() {
             ) : null}
           </View>
         ) : isPast ? (
-          <Button title="Activity has ended" disabled size="lg" />
+          <Button title="Activity has ended" disabled onPress={() => {}} size="lg" />
         ) : isFull ? (
-          <Button title="Activity is full" disabled size="lg" />
+          <Button title="Activity is full" disabled onPress={() => {}} size="lg" />
         ) : (
           <Button
             title="Request to Join"
@@ -412,7 +412,7 @@ export default function ActivityDetailScreen() {
         confirmText="Leave"
         cancelText="Cancel"
         onConfirm={handleLeave}
-        onCancel={() => setShowLeaveDialog(false)}
+        onClose={() => setShowLeaveDialog(false)}
         destructive
       />
 
@@ -424,7 +424,7 @@ export default function ActivityDetailScreen() {
         confirmText="Delete"
         cancelText="Cancel"
         onConfirm={handleDelete}
-        onCancel={() => setShowDeleteDialog(false)}
+        onClose={() => setShowDeleteDialog(false)}
         destructive
       />
     </View>

@@ -111,6 +111,19 @@ export const useAuthStore = create<AuthState>()(
         settings: state.settings,
         isOnboarded: state.isOnboarded,
       }),
+      onRehydrateStorage: () => {
+        return (state, error) => {
+          if (error) {
+            useAuthStore.setState({ isLoading: false });
+            return;
+          }
+          // Derive isAuthenticated from persisted user/tokens and stop loading
+          useAuthStore.setState({
+            isLoading: false,
+            isAuthenticated: !!(state?.user && state?.tokens),
+          });
+        };
+      },
     }
   )
 );

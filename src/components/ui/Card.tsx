@@ -16,7 +16,7 @@ import { BorderRadius, Spacing } from '../../constants/spacing';
 
 interface CardProps {
   children: React.ReactNode;
-  style?: ViewStyle;
+  style?: ViewStyle | ViewStyle[];
   padding?: 'none' | 'sm' | 'md' | 'lg';
   variant?: 'elevated' | 'outlined' | 'filled';
   onPress?: () => void;
@@ -29,10 +29,16 @@ export const Card: React.FC<CardProps> = ({
   variant = 'elevated',
   onPress,
 }) => {
+  const paddingMap: Record<string, keyof typeof styles> = {
+    sm: 'paddingSm',
+    md: 'paddingMd',
+    lg: 'paddingLg',
+  };
+
   const cardStyles = [
     styles.base,
     styles[variant],
-    padding !== 'none' && styles[`padding${padding.charAt(0).toUpperCase()}${padding.slice(1)}`],
+    padding !== 'none' && paddingMap[padding] ? styles[paddingMap[padding]] : undefined,
     style,
   ];
 
@@ -97,7 +103,7 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
   onPress,
 }) => {
   return (
-    <Card style={[styles.activityCard, style]} onPress={onPress} padding="lg">
+    <Card style={style ? [styles.activityCard, style] : styles.activityCard} onPress={onPress} padding="lg">
       {children}
     </Card>
   );

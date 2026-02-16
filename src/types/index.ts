@@ -7,8 +7,10 @@
 
 export interface User {
   id: string;
-  phone: string;
-  phoneVerified: boolean;
+  email: string;
+  emailVerified: boolean;
+  phone?: string;
+  phoneVerified?: boolean;
   displayName: string;
   bio?: string;
   avatarUrl?: string;
@@ -123,7 +125,7 @@ export interface Activity {
   scheduledAt: string;
   maxParticipants: number;
   currentParticipants: number;
-  status: 'open' | 'full' | 'completed' | 'cancelled';
+  status: 'open' | 'full' | 'completed' | 'cancelled' | 'expired';
   createdAt: string;
   updatedAt: string;
 }

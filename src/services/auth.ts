@@ -5,22 +5,21 @@
 
 import api, { parseApiError } from './api';
 import type {
-  RequestCodeRequest,
-  RequestCodeResponse,
-  VerifyCodeRequest,
-  VerifyCodeResponse,
+  SignUpResponse,
+  SignInResponse,
   RefreshTokenResponse,
 } from '../types/api.types';
 
 export const authService = {
   /**
-   * Request SMS verification code
+   * Sign up with email and password
    */
-  async requestCode(phone: string): Promise<RequestCodeResponse> {
+  async signUp(email: string, password: string): Promise<SignUpResponse> {
     try {
-      const response = await api.post<RequestCodeResponse>('/auth/request-code', {
-        phone,
-      } as RequestCodeRequest);
+      const response = await api.post<SignUpResponse>('/auth/signup', {
+        email,
+        password,
+      });
       return response.data;
     } catch (error) {
       throw parseApiError(error);
@@ -28,14 +27,14 @@ export const authService = {
   },
 
   /**
-   * Verify SMS code and get tokens
+   * Sign in with email and password
    */
-  async verifyCode(phone: string, code: string): Promise<VerifyCodeResponse> {
+  async signIn(email: string, password: string): Promise<SignInResponse> {
     try {
-      const response = await api.post<VerifyCodeResponse>('/auth/verify-code', {
-        phone,
-        code,
-      } as VerifyCodeRequest);
+      const response = await api.post<SignInResponse>('/auth/signin', {
+        email,
+        password,
+      });
       return response.data;
     } catch (error) {
       throw parseApiError(error);
@@ -65,9 +64,9 @@ export const authService = {
   /**
    * Dev login — get real tokens from the backend for a test user
    */
-  async devLogin(): Promise<VerifyCodeResponse> {
+  async devLogin(): Promise<SignInResponse> {
     try {
-      const response = await api.post<VerifyCodeResponse>('/auth/dev-login');
+      const response = await api.post<SignInResponse>('/auth/dev-login');
       return response.data;
     } catch (error) {
       throw parseApiError(error);

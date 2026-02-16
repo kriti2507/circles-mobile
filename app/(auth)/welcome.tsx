@@ -90,12 +90,12 @@ export default function WelcomeScreen() {
     if (currentIndex < slides.length - 1) {
       flatListRef.current?.scrollToIndex({ index: currentIndex + 1 });
     } else {
-      router.push('/(auth)/phone');
+      router.push('/(auth)/login');
     }
   };
 
   const handleSkip = () => {
-    router.push('/(auth)/phone');
+    router.push('/(auth)/login');
   };
 
   const renderSlide = ({ item }: { item: OnboardingSlide }) => (
@@ -168,7 +168,7 @@ export default function WelcomeScreen() {
 
         <View style={styles.loginRow}>
           <Text style={styles.loginText}>Already have an account? </Text>
-          <TouchableOpacity onPress={() => router.push('/(auth)/phone')}>
+          <TouchableOpacity onPress={() => router.push('/(auth)/login')}>
             <Text style={styles.loginLink}>Log In</Text>
           </TouchableOpacity>
         </View>

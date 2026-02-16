@@ -5,21 +5,26 @@
 
 // ============== Auth Endpoints ==============
 
-export interface RequestCodeRequest {
-  phone: string;
+export interface SignUpRequest {
+  email: string;
+  password: string;
 }
 
-export interface RequestCodeResponse {
-  success: boolean;
-  expiresIn: number;
+export interface SignUpResponse {
+  success?: boolean;
+  message?: string;
+  token?: string;
+  refreshToken?: string;
+  user?: import('./index').User;
+  isNewUser?: boolean;
 }
 
-export interface VerifyCodeRequest {
-  phone: string;
-  code: string;
+export interface SignInRequest {
+  email: string;
+  password: string;
 }
 
-export interface VerifyCodeResponse {
+export interface SignInResponse {
   token: string;
   refreshToken: string;
   user: import('./index').User;
@@ -99,7 +104,7 @@ export interface GetActivitiesQuery {
   lat: number;
   lng: number;
   radius?: number;
-  status?: 'open' | 'full' | 'completed' | 'cancelled';
+  status?: 'open' | 'full' | 'completed' | 'cancelled' | 'expired';
 }
 
 export interface GetActivitiesResponse {
@@ -127,7 +132,7 @@ export interface UpdateActivityRequest {
   description?: string;
   locationName?: string;
   scheduledAt?: string;
-  status?: 'open' | 'full' | 'completed' | 'cancelled';
+  status?: 'open' | 'full' | 'completed' | 'cancelled' | 'expired';
 }
 
 export interface UpdateParticipantRequest {

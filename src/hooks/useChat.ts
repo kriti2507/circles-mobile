@@ -95,11 +95,11 @@ export const useChat = ({ roomType, roomId }: UseChatOptions) => {
       const result =
         roomType === 'circle'
           ? await circlesService.getMessages({
-              before: oldestMessage.id,
+              before: oldestMessage.createdAt,
               limit: AppConfig.MESSAGE_PAGE_SIZE,
             })
           : await activitiesService.getMessages(roomId, {
-              before: oldestMessage.id,
+              before: oldestMessage.createdAt,
               limit: AppConfig.MESSAGE_PAGE_SIZE,
             });
 
@@ -107,6 +107,8 @@ export const useChat = ({ roomType, roomId }: UseChatOptions) => {
     } catch (err) {
       const apiError = err as ApiError;
       setError(apiError.message);
+    } finally {
+      setRoomLoading(roomId, false);
     }
   }, [roomId, roomType, hasMore, isLoading, messages, prependMessages, setRoomLoading]);
 

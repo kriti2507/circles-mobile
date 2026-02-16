@@ -150,7 +150,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     if (room) {
       rooms.set(roomId, {
         ...room,
-        messages: [...room.messages, { ...message, id: `temp-${Date.now()}` }],
+        messages: [...room.messages, message],
       });
       set({ rooms });
     }

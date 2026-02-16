@@ -19,14 +19,33 @@ export const useAuth = () => {
   const [error, setError] = useState<string | null>(null);
 
   /**
-   * Request SMS verification code
+   * Sign up with email and password
    */
-  const requestCode = useCallback(async (phone: string) => {
+  const signUp = useCallback(async (email: string, password: string) => {
     setLoading(true);
     setError(null);
 
     try {
-      const result = await authService.requestCode(phone);
+      const result = await authService.signUp(email, password);
+
+      if (!result.token) {
+        // Email confirmation required — stay on login screen
+        return result;
+      }
+
+      // Auto-confirmed: full login flow
+      const profile = await usersService.getMe();
+
+      login(
+        profile.user,
+        { accessToken: result.token, refreshToken: result.refreshToken! },
+        profile.settings
+      );
+
+      socketService.connect();
+
+      router.replace('/(onboarding)/name');
+
       return result;
     } catch (err) {
       const apiError = err as ApiError;
@@ -35,18 +54,18 @@ export const useAuth = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [login, router]);
 
   /**
-   * Verify SMS code and login
+   * Sign in with email and password
    */
-  const verifyCode = useCallback(
-    async (phone: string, code: string) => {
+  const signIn = useCallback(
+    async (email: string, password: string) => {
       setLoading(true);
       setError(null);
 
       try {
-        const result = await authService.verifyCode(phone, code);
+        const result = await authService.signIn(email, password);
 
         // Get full user profile
         const profile = await usersService.getMe();
@@ -123,8 +142,8 @@ export const useAuth = () => {
     isOnboarded,
     isLoading,
     error,
-    requestCode,
-    verifyCode,
+    signUp,
+    signIn,
     initAuth,
     signOut,
     clearError: () => setError(null),

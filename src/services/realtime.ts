@@ -4,6 +4,7 @@
  * Provides typed subscription helpers for circle and activity events
  */
 
+import { socketService } from './socket';
 import type { Message, CircleMember, Prompt } from '../types';
 
 type UnsubscribeFn = () => void;
@@ -38,12 +39,15 @@ class RealtimeService {
   ): UnsubscribeFn {
     const channelKey = `circle-${circleId}`;
 
-    const { socketService } = require('./socket');
     socketService.joinRoom('circle', circleId);
 
-    // Wire handler callbacks to socket events
+    // BUG 5: Filter by room ID so handlers only fire for this circle's messages
     const messageHandler = handlers.onMessage
-      ? (data: { message: Message }) => handlers.onMessage!(data.message)
+      ? (data: { message: Message }) => {
+          if (data.message.circleId === circleId) {
+            handlers.onMessage!(data.message);
+          }
+        }
       : undefined;
     const memberJoinedHandler = handlers.onMemberJoined
       ? (data: { user: any; room_id: string }) =>
@@ -87,20 +91,29 @@ class RealtimeService {
   ): UnsubscribeFn {
     const channelKey = `activity-${activityId}`;
 
-    const { socketService } = require('./socket');
     socketService.joinRoom('activity', activityId);
 
-    // Wire handler callbacks to socket events
+    // BUG 5: Filter by room ID so handlers only fire for this activity's messages
     const messageHandler = handlers.onMessage
-      ? (data: { message: Message }) => handlers.onMessage!(data.message)
+      ? (data: { message: Message }) => {
+          if (data.message.activityId === activityId) {
+            handlers.onMessage!(data.message);
+          }
+        }
       : undefined;
     const participantHandler = handlers.onParticipantUpdate
-      ? (data: { activity_id: string; user: any; status: string }) =>
-          handlers.onParticipantUpdate!({ userId: data.user.id, status: data.status })
+      ? (data: { activity_id: string; user: any; status: string }) => {
+          if (data.activity_id === activityId) {
+            handlers.onParticipantUpdate!({ userId: data.user.id, status: data.status });
+          }
+        }
       : undefined;
     const statusHandler = handlers.onStatusChange
-      ? (data: { activity_id: string; status: string }) =>
-          handlers.onStatusChange!(data.status)
+      ? (data: { activity_id: string; status: string }) => {
+          if (data.activity_id === activityId) {
+            handlers.onStatusChange!(data.status);
+          }
+        }
       : undefined;
 
     if (messageHandler) socketService.on('chat:message', messageHandler);

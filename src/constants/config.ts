@@ -13,8 +13,8 @@ interface EnvConfig {
 
 const ENV_CONFIG: Record<Environment, EnvConfig> = {
   development: {
-    API_URL: 'http://localhost:3000/api/v1',
-    SOCKET_URL: 'http://localhost:3000',
+    API_URL: 'http://172.20.10.7:3000/api/v1',
+    SOCKET_URL: 'http://172.20.10.7:3000',
     DEBUG: true,
   },
   staging: {
@@ -48,6 +48,8 @@ export const DEV_SKIP_AUTH = currentEnv === 'development';
 // Mock data for development login (only used when DEV_SKIP_AUTH is true)
 export const DEV_MOCK_USER = {
   id: 'dev-user-001',
+  email: 'dev@circles.app',
+  emailVerified: true,
   phone: '+1234567890',
   phoneVerified: true,
   displayName: 'Dev User',

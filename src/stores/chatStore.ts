@@ -4,7 +4,7 @@
  */
 
 import { create } from 'zustand';
-import type { Message, TypingEvent } from '../types';
+import type { Message } from '../types';
 
 interface ChatRoom {
   id: string;
@@ -12,12 +12,12 @@ interface ChatRoom {
   messages: Message[];
   hasMore: boolean;
   isLoading: boolean;
-  typingUsers: Map<string, { displayName: string; timestamp: number }>;
+  typingUsers: Record<string, { displayName: string; timestamp: number }>;
 }
 
 interface ChatState {
   // State
-  rooms: Map<string, ChatRoom>;
+  rooms: Record<string, ChatRoom>;
   activeRoomId: string | null;
   isConnected: boolean;
 
@@ -50,11 +50,11 @@ const createEmptyRoom = (id: string, type: 'circle' | 'activity'): ChatRoom => (
   messages: [],
   hasMore: true,
   isLoading: false,
-  typingUsers: new Map(),
+  typingUsers: {},
 });
 
 export const useChatStore = create<ChatState>((set, get) => ({
-  rooms: new Map(),
+  rooms: {},
   activeRoomId: null,
   isConnected: false,
 
@@ -63,128 +63,152 @@ export const useChatStore = create<ChatState>((set, get) => ({
   setIsConnected: (isConnected) => set({ isConnected }),
 
   initRoom: (roomId, type) => {
-    const rooms = new Map(get().rooms);
-    if (!rooms.has(roomId)) {
-      rooms.set(roomId, createEmptyRoom(roomId, type));
-      set({ rooms });
+    const rooms = get().rooms;
+    if (!rooms[roomId]) {
+      set({ rooms: { ...rooms, [roomId]: createEmptyRoom(roomId, type) } });
     }
   },
 
   setMessages: (roomId, messages, hasMore) => {
-    const rooms = new Map(get().rooms);
-    const room = rooms.get(roomId);
+    const room = get().rooms[roomId];
     if (room) {
-      rooms.set(roomId, { ...room, messages, hasMore, isLoading: false });
-      set({ rooms });
+      set({
+        rooms: {
+          ...get().rooms,
+          [roomId]: { ...room, messages, hasMore, isLoading: false },
+        },
+      });
     }
   },
 
   addMessage: (roomId, message) => {
-    const rooms = new Map(get().rooms);
-    const room = rooms.get(roomId);
+    const room = get().rooms[roomId];
     if (room) {
       // Avoid duplicates
       if (!room.messages.find((m) => m.id === message.id)) {
-        rooms.set(roomId, {
-          ...room,
-          messages: [...room.messages, message],
+        set({
+          rooms: {
+            ...get().rooms,
+            [roomId]: { ...room, messages: [message, ...room.messages] },
+          },
         });
-        set({ rooms });
       }
     }
   },
 
   prependMessages: (roomId, messages, hasMore) => {
-    const rooms = new Map(get().rooms);
-    const room = rooms.get(roomId);
+    const room = get().rooms[roomId];
     if (room) {
       // Filter out duplicates
       const existingIds = new Set(room.messages.map((m) => m.id));
       const newMessages = messages.filter((m) => !existingIds.has(m.id));
-      rooms.set(roomId, {
-        ...room,
-        messages: [...newMessages, ...room.messages],
-        hasMore,
-        isLoading: false,
+      set({
+        rooms: {
+          ...get().rooms,
+          [roomId]: {
+            ...room,
+            messages: [...room.messages, ...newMessages],
+            hasMore,
+            isLoading: false,
+          },
+        },
       });
-      set({ rooms });
     }
   },
 
   setRoomLoading: (roomId, loading) => {
-    const rooms = new Map(get().rooms);
-    const room = rooms.get(roomId);
+    const room = get().rooms[roomId];
     if (room) {
-      rooms.set(roomId, { ...room, isLoading: loading });
-      set({ rooms });
+      set({
+        rooms: {
+          ...get().rooms,
+          [roomId]: { ...room, isLoading: loading },
+        },
+      });
     }
   },
 
   setUserTyping: (roomId, userId, displayName, isTyping) => {
-    const rooms = new Map(get().rooms);
-    const room = rooms.get(roomId);
+    const room = get().rooms[roomId];
     if (room) {
-      const typingUsers = new Map(room.typingUsers);
+      const typingUsers = { ...room.typingUsers };
       if (isTyping) {
-        typingUsers.set(userId, { displayName, timestamp: Date.now() });
+        typingUsers[userId] = { displayName, timestamp: Date.now() };
       } else {
-        typingUsers.delete(userId);
+        delete typingUsers[userId];
       }
-      rooms.set(roomId, { ...room, typingUsers });
-      set({ rooms });
+      set({
+        rooms: {
+          ...get().rooms,
+          [roomId]: { ...room, typingUsers },
+        },
+      });
     }
   },
 
   clearTypingUsers: (roomId) => {
-    const rooms = new Map(get().rooms);
-    const room = rooms.get(roomId);
+    const room = get().rooms[roomId];
     if (room) {
-      rooms.set(roomId, { ...room, typingUsers: new Map() });
-      set({ rooms });
+      set({
+        rooms: {
+          ...get().rooms,
+          [roomId]: { ...room, typingUsers: {} },
+        },
+      });
     }
   },
 
   addOptimisticMessage: (roomId, message) => {
-    const rooms = new Map(get().rooms);
-    const room = rooms.get(roomId);
+    const room = get().rooms[roomId];
     if (room) {
-      rooms.set(roomId, {
-        ...room,
-        messages: [...room.messages, message],
+      set({
+        rooms: {
+          ...get().rooms,
+          [roomId]: { ...room, messages: [message, ...room.messages] },
+        },
       });
-      set({ rooms });
     }
   },
 
   confirmMessage: (roomId, tempId, confirmedMessage) => {
-    const rooms = new Map(get().rooms);
-    const room = rooms.get(roomId);
+    const room = get().rooms[roomId];
     if (room) {
-      rooms.set(roomId, {
-        ...room,
-        messages: room.messages.map((m) =>
-          m.id === tempId ? confirmedMessage : m
-        ),
+      // If the socket handler already added the real message, just remove the optimistic one
+      const alreadyExists = room.messages.some((m) => m.id === confirmedMessage.id);
+
+      const messages = alreadyExists
+        ? room.messages.filter((m) => m.id !== tempId)
+        : room.messages.map((m) => (m.id === tempId ? confirmedMessage : m));
+
+      set({
+        rooms: {
+          ...get().rooms,
+          [roomId]: { ...room, messages },
+        },
       });
-      set({ rooms });
     }
   },
 
   failMessage: (roomId, tempId) => {
-    const rooms = new Map(get().rooms);
-    const room = rooms.get(roomId);
+    const room = get().rooms[roomId];
     if (room) {
-      rooms.set(roomId, {
-        ...room,
-        messages: room.messages.filter((m) => m.id !== tempId),
+      set({
+        rooms: {
+          ...get().rooms,
+          [roomId]: {
+            ...room,
+            messages: room.messages.map((m) =>
+              m.id === tempId ? { ...m, failed: true } : m
+            ),
+          },
+        },
       });
-      set({ rooms });
     }
   },
 
   reset: () =>
     set({
-      rooms: new Map(),
+      rooms: {},
       activeRoomId: null,
       isConnected: false,
     }),
@@ -192,10 +216,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
 // Selectors
 export const selectRoom = (roomId: string) => (state: ChatState) =>
-  state.rooms.get(roomId);
+  state.rooms[roomId];
 export const selectMessages = (roomId: string) => (state: ChatState) =>
-  state.rooms.get(roomId)?.messages ?? [];
+  state.rooms[roomId]?.messages ?? [];
 export const selectTypingUsers = (roomId: string) => (state: ChatState) =>
-  state.rooms.get(roomId)?.typingUsers ?? new Map();
+  state.rooms[roomId]?.typingUsers ?? {};
 
 export default useChatStore;

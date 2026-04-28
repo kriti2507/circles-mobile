@@ -50,13 +50,13 @@ export default function ActivitiesScreen() {
 
   const [selectedFilter, setSelectedFilter] = useState('all');
 
-  // Get location and fetch activities on mount
+  // BUG 7: Pass location directly to fetchActivities to avoid stale closure race
   useEffect(() => {
     const init = async () => {
       const loc = await getCurrentLocation();
       if (loc) {
         setFilters({ latitude: loc.latitude, longitude: loc.longitude });
-        fetchActivities();
+        fetchActivities(false, { latitude: loc.latitude, longitude: loc.longitude });
       }
     };
     init();
@@ -190,8 +190,11 @@ export default function ActivitiesScreen() {
           data={activities}
           renderItem={renderActivityCard}
           keyExtractor={(item) => item.id}
+          style={styles.activityList}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          keyboardDismissMode="on-drag"
+          keyboardShouldPersistTaps="handled"
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing}
@@ -253,6 +256,9 @@ const styles = StyleSheet.create({
   },
   filterChip: {
     marginRight: Spacing.sm,
+  },
+  activityList: {
+    flex: 1,
   },
   listContent: {
     padding: Spacing.xl,

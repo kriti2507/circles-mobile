@@ -90,7 +90,7 @@ export default function CircleChatScreen() {
   }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -161,7 +161,6 @@ export default function CircleChatScreen() {
           onSend={handleSend}
           onTyping={handleTyping}
           placeholder="Type a message..."
-          disabled={!isConnected}
         />
       </KeyboardAvoidingView>
 

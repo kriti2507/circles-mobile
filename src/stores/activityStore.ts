@@ -11,7 +11,8 @@ interface ActivityState {
   activities: Activity[];
   myActivities: Activity[];
   currentActivity: ActivityWithDetails | null;
-  isLoading: boolean;
+  isListLoading: boolean;
+  isDetailLoading: boolean;
   isRefreshing: boolean;
   error: string | null;
 
@@ -27,7 +28,8 @@ interface ActivityState {
   setActivities: (activities: Activity[]) => void;
   setMyActivities: (activities: Activity[]) => void;
   setCurrentActivity: (activity: ActivityWithDetails | null) => void;
-  setIsLoading: (loading: boolean) => void;
+  setIsListLoading: (loading: boolean) => void;
+  setIsDetailLoading: (loading: boolean) => void;
   setIsRefreshing: (refreshing: boolean) => void;
   setError: (error: string | null) => void;
   setFilters: (filters: Partial<ActivityState['filters']>) => void;
@@ -51,7 +53,8 @@ const initialState = {
   activities: [],
   myActivities: [],
   currentActivity: null,
-  isLoading: false,
+  isListLoading: false,
+  isDetailLoading: false,
   isRefreshing: false,
   error: null,
   filters: {
@@ -71,7 +74,9 @@ export const useActivityStore = create<ActivityState>((set, get) => ({
 
   setCurrentActivity: (currentActivity) => set({ currentActivity }),
 
-  setIsLoading: (isLoading) => set({ isLoading }),
+  setIsListLoading: (isListLoading) => set({ isListLoading }),
+
+  setIsDetailLoading: (isDetailLoading) => set({ isDetailLoading }),
 
   setIsRefreshing: (isRefreshing) => set({ isRefreshing }),
 

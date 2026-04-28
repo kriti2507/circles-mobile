@@ -7,12 +7,13 @@ import { io, Socket } from 'socket.io-client';
 import { Config, AppConfig } from '../constants/config';
 import { useAuthStore } from '../stores/authStore';
 import { useChatStore } from '../stores/chatStore';
+import { onTokenRefreshed } from './api';
 import type { Message, TypingEvent, MemberEvent } from '../types';
 
 class SocketService {
   private socket: Socket | null = null;
-  private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
+  private joinedRooms = new Set<string>();
+  private unsubTokenRefresh: (() => void) | null = null;
 
   /**
    * Connect to WebSocket server
@@ -29,6 +30,12 @@ class SocketService {
       return;
     }
 
+    // Clean up previous socket instance if it exists but is disconnected
+    if (this.socket) {
+      this.socket.removeAllListeners();
+      this.socket = null;
+    }
+
     this.socket = io(Config.SOCKET_URL, {
       auth: {
         token: tokens.accessToken,
@@ -36,25 +43,42 @@ class SocketService {
       transports: ['websocket'],
       reconnection: true,
       reconnectionDelay: AppConfig.SOCKET_RECONNECT_DELAY,
-      reconnectionAttempts: this.maxReconnectAttempts,
+      reconnectionAttempts: 5,
     });
 
     this.setupEventHandlers();
+
+    // BUG 2: Subscribe to token refresh so socket auth stays current
+    this.unsubTokenRefresh = onTokenRefreshed((newTokens) => {
+      if (this.socket) {
+        this.socket.auth = { token: newTokens.accessToken };
+        // If disconnected, the next reconnect will use the fresh token.
+        // If connected, disconnect and reconnect with new token.
+        if (this.socket.connected) {
+          this.socket.disconnect().connect();
+        }
+      }
+    });
   }
 
   /**
    * Disconnect from WebSocket server
    */
   disconnect(): void {
+    if (this.unsubTokenRefresh) {
+      this.unsubTokenRefresh();
+      this.unsubTokenRefresh = null;
+    }
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
+      this.joinedRooms.clear();
       useChatStore.getState().setIsConnected(false);
     }
   }
 
   /**
-   * Join a chat room
+   * Join a chat room (BUG 8: dedup with Set)
    */
   joinRoom(roomType: 'circle' | 'activity', roomId: string): void {
     if (!this.socket?.connected) {
@@ -62,7 +86,13 @@ class SocketService {
       return;
     }
 
+    const roomKey = `${roomType}:${roomId}`;
+    if (this.joinedRooms.has(roomKey)) {
+      return;
+    }
+
     this.socket.emit('chat:join', { room_type: roomType, room_id: roomId });
+    this.joinedRooms.add(roomKey);
     useChatStore.getState().initRoom(roomId, roomType);
   }
 
@@ -72,24 +102,12 @@ class SocketService {
   leaveRoom(roomType: 'circle' | 'activity', roomId: string): void {
     if (!this.socket?.connected) return;
 
+    const roomKey = `${roomType}:${roomId}`;
+    this.joinedRooms.delete(roomKey);
     this.socket.emit('chat:leave', { room_type: roomType, room_id: roomId });
   }
 
-  /**
-   * Send a message to a room
-   */
-  sendMessage(roomType: 'circle' | 'activity', roomId: string, content: string): void {
-    if (!this.socket?.connected) {
-      console.warn('Cannot send message: Socket not connected');
-      return;
-    }
-
-    this.socket.emit('chat:message', {
-      room_type: roomType,
-      room_id: roomId,
-      content,
-    });
-  }
+  // BUG 15/22: sendMessage removed — messages go through REST, server broadcasts via socket
 
   /**
    * Send typing indicator
@@ -127,6 +145,7 @@ class SocketService {
 
   /**
    * Set up event handlers
+   * BUG 3: Removed manual reconnect counter — socket.io handles reconnection internally
    */
   private setupEventHandlers(): void {
     if (!this.socket) return;
@@ -134,7 +153,6 @@ class SocketService {
     // Connection events
     this.socket.on('connect', () => {
       console.log('Socket connected');
-      this.reconnectAttempts = 0;
       useChatStore.getState().setIsConnected(true);
     });
 
@@ -143,14 +161,10 @@ class SocketService {
       useChatStore.getState().setIsConnected(false);
     });
 
-    this.socket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error);
-      this.reconnectAttempts++;
-
-      if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-        console.error('Max reconnection attempts reached');
-        this.disconnect();
-      }
+    // BUG 3: Use reconnect_failed instead of manual counter on connect_error
+    this.socket.io.on('reconnect_failed', () => {
+      console.error('Socket reconnection failed after max attempts');
+      useChatStore.getState().setIsConnected(false);
     });
 
     this.socket.on('error', (data: { message: string }) => {
@@ -173,7 +187,6 @@ class SocketService {
 
     // Circle events
     this.socket.on('circle:prompt', (data: { prompt: any }) => {
-      // Handle new prompt - this would update the circle store
       console.log('New prompt received:', data.prompt);
     });
 

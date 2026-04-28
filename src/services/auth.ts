@@ -7,7 +7,6 @@ import api, { parseApiError } from './api';
 import type {
   SignUpResponse,
   SignInResponse,
-  RefreshTokenResponse,
 } from '../types/api.types';
 
 export const authService = {
@@ -41,25 +40,7 @@ export const authService = {
     }
   },
 
-  /**
-   * Refresh access token
-   */
-  async refreshToken(refreshToken: string): Promise<RefreshTokenResponse> {
-    try {
-      const response = await api.post<RefreshTokenResponse>(
-        '/auth/refresh',
-        null,
-        {
-          headers: {
-            Authorization: `Bearer ${refreshToken}`,
-          },
-        }
-      );
-      return response.data;
-    } catch (error) {
-      throw parseApiError(error);
-    }
-  },
+  // refreshToken removed — token refresh is handled by the api.ts interceptor directly
 
   /**
    * Dev login — get real tokens from the backend for a test user

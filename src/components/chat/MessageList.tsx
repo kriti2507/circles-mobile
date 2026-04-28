@@ -37,16 +37,17 @@ export const MessageList: React.FC<MessageListProps> = ({
   const flatListRef = useRef<FlatList>(null);
 
   // Group messages by sender for avatar/name display
+  // Messages are in DESC order (newest first), inverted FlatList shows index 0 at bottom
   const shouldShowAvatar = useCallback(
     (message: Message, index: number): boolean => {
       if (message.senderId === currentUserId) return false;
       if (message.messageType !== 'text') return false;
 
-      // Show avatar if this is the last message from this sender in a group
-      const nextMessage = messages[index + 1];
-      if (!nextMessage) return true;
-      if (nextMessage.senderId !== message.senderId) return true;
-      if (nextMessage.messageType !== 'text') return true;
+      // Show avatar at the bottom of a consecutive group (lowest index = bottommost)
+      const belowMessage = messages[index - 1];
+      if (!belowMessage) return true;
+      if (belowMessage.senderId !== message.senderId) return true;
+      if (belowMessage.messageType !== 'text') return true;
 
       return false;
     },
@@ -58,11 +59,11 @@ export const MessageList: React.FC<MessageListProps> = ({
       if (message.senderId === currentUserId) return false;
       if (message.messageType !== 'text') return false;
 
-      // Show name if this is the first message from this sender in a group
-      const prevMessage = messages[index - 1];
-      if (!prevMessage) return true;
-      if (prevMessage.senderId !== message.senderId) return true;
-      if (prevMessage.messageType !== 'text') return true;
+      // Show name at the top of a consecutive group (highest index = topmost)
+      const aboveMessage = messages[index + 1];
+      if (!aboveMessage) return true;
+      if (aboveMessage.senderId !== message.senderId) return true;
+      if (aboveMessage.messageType !== 'text') return true;
 
       return false;
     },
@@ -118,9 +119,9 @@ export const MessageList: React.FC<MessageListProps> = ({
       onEndReached={handleEndReached}
       onEndReachedThreshold={0.2}
       showsVerticalScrollIndicator={false}
-      maintainVisibleContentPosition={{
-        minIndexForVisible: 0,
-      }}
+      automaticallyAdjustContentInsets={false}
+      keyboardDismissMode="interactive"
+      keyboardShouldPersistTaps="handled"
     />
   );
 };
@@ -131,7 +132,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.backgroundLight,
   },
   contentContainer: {
-    paddingVertical: Spacing.md,
+    paddingTop: Spacing.base,
+    paddingBottom: Spacing.md,
   },
   loadingContainer: {
     paddingVertical: Spacing.lg,

@@ -10,7 +10,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   Platform,
-  KeyboardAvoidingView,
   ViewStyle,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -58,40 +57,35 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const canSend = message.trim().length > 0 && !disabled;
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
-    >
-      <View style={[styles.container, style]}>
-        <View style={styles.inputWrapper}>
-          <TextInput
-            ref={inputRef}
-            style={styles.input}
-            value={message}
-            onChangeText={handleChangeText}
-            placeholder={placeholder}
-            placeholderTextColor={Colors.textMuted}
-            multiline
-            maxLength={1000}
-            editable={!disabled}
-            textAlignVertical="center"
-          />
-        </View>
-
-        <TouchableOpacity
-          style={[styles.sendButton, !canSend && styles.sendButtonDisabled]}
-          onPress={handleSend}
-          disabled={!canSend}
-          activeOpacity={0.7}
-        >
-          <Ionicons
-            name="send"
-            size={20}
-            color={canSend ? Colors.surfaceLight : Colors.textMuted}
-          />
-        </TouchableOpacity>
+    <View style={[styles.container, style]}>
+      <View style={styles.inputWrapper}>
+        <TextInput
+          ref={inputRef}
+          style={styles.input}
+          value={message}
+          onChangeText={handleChangeText}
+          placeholder={placeholder}
+          placeholderTextColor={Colors.textMuted}
+          multiline
+          maxLength={1000}
+          editable={!disabled}
+          textAlignVertical="top"
+        />
       </View>
-    </KeyboardAvoidingView>
+
+      <TouchableOpacity
+        style={[styles.sendButton, !canSend && styles.sendButtonDisabled]}
+        onPress={handleSend}
+        disabled={!canSend}
+        activeOpacity={0.7}
+      >
+        <Ionicons
+          name="send"
+          size={20}
+          color={canSend ? Colors.surfaceLight : Colors.textMuted}
+        />
+      </TouchableOpacity>
+    </View>
   );
 };
 
@@ -114,7 +108,6 @@ const styles = StyleSheet.create({
     marginRight: Spacing.md,
     minHeight: 44,
     maxHeight: 120,
-    justifyContent: 'center',
   },
   input: {
     fontFamily: FontFamily.regular,

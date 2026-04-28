@@ -103,6 +103,7 @@ export interface Message {
   content: string;
   messageType: 'text' | 'system' | 'prompt';
   createdAt: string;
+  failed?: boolean;
 }
 
 // ============== Activity Types ==============

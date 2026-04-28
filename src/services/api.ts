@@ -6,6 +6,7 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { Config, AppConfig } from '../constants/config';
 import { useAuthStore } from '../stores/authStore';
+import type { AuthTokens } from '../types';
 
 // Create axios instance
 const api: AxiosInstance = axios.create({
@@ -15,6 +16,28 @@ const api: AxiosInstance = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// --- Token refresh mutex (BUG 1) ---
+let refreshPromise: Promise<AuthTokens> | null = null;
+type TokenRefreshCallback = (tokens: AuthTokens) => void;
+const tokenRefreshListeners: Set<TokenRefreshCallback> = new Set();
+
+/**
+ * Subscribe to token refresh events.
+ * Returns an unsubscribe function.
+ */
+export function onTokenRefreshed(callback: TokenRefreshCallback): () => void {
+  tokenRefreshListeners.add(callback);
+  return () => {
+    tokenRefreshListeners.delete(callback);
+  };
+}
+
+function notifyTokenRefreshListeners(tokens: AuthTokens) {
+  for (const cb of tokenRefreshListeners) {
+    try { cb(tokens); } catch {}
+  }
+}
 
 // Request interceptor - add auth token
 api.interceptors.request.use(
@@ -28,7 +51,7 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor - handle token refresh
+// Response interceptor - handle token refresh with mutex
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
@@ -39,26 +62,39 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const tokens = useAuthStore.getState().tokens;
-        if (tokens?.refreshToken) {
-          const response = await axios.post(`${Config.API_URL}/auth/refresh`, null, {
-            headers: {
-              Authorization: `Bearer ${tokens.refreshToken}`,
-            },
-          });
+        // If a refresh is already in-flight, wait for it instead of issuing a new one
+        if (!refreshPromise) {
+          refreshPromise = (async () => {
+            const tokens = useAuthStore.getState().tokens;
+            if (!tokens?.refreshToken) {
+              throw new Error('No refresh token');
+            }
 
-          const newTokens = {
-            accessToken: response.data.token,
-            refreshToken: response.data.refreshToken,
-          };
+            const response = await axios.post(`${Config.API_URL}/auth/refresh`, null, {
+              headers: {
+                Authorization: `Bearer ${tokens.refreshToken}`,
+              },
+            });
 
-          useAuthStore.getState().setTokens(newTokens);
+            const newTokens: AuthTokens = {
+              accessToken: response.data.token,
+              refreshToken: response.data.refreshToken,
+            };
 
-          // Retry original request with new token
-          originalRequest.headers.Authorization = `Bearer ${newTokens.accessToken}`;
-          return api(originalRequest);
+            useAuthStore.getState().setTokens(newTokens);
+            notifyTokenRefreshListeners(newTokens);
+            return newTokens;
+          })();
         }
+
+        const newTokens = await refreshPromise;
+        refreshPromise = null;
+
+        // Retry original request with new token
+        originalRequest.headers.Authorization = `Bearer ${newTokens.accessToken}`;
+        return api(originalRequest);
       } catch (refreshError) {
+        refreshPromise = null;
         // Refresh failed, logout user
         useAuthStore.getState().logout();
         return Promise.reject(refreshError);

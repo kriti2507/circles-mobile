@@ -92,14 +92,19 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           </Text>
         </View>
 
-        <Text
-          style={[
-            styles.timestamp,
-            isOwnMessage ? styles.timestampOwn : styles.timestampOther,
-          ]}
-        >
-          {formatTime(message.createdAt)}
-        </Text>
+        <View style={[styles.metaRow, isOwnMessage ? styles.metaRowOwn : styles.metaRowOther]}>
+          {message.failed && (
+            <Text style={styles.failedText}>Failed to send</Text>
+          )}
+          <Text
+            style={[
+              styles.timestamp,
+              isOwnMessage ? styles.timestampOwn : styles.timestampOther,
+            ]}
+          >
+            {formatTime(message.createdAt)}
+          </Text>
+        </View>
       </View>
     </View>
   );
@@ -167,20 +172,37 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
   },
 
+  // Meta row (timestamp + failed indicator)
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: Spacing.xs,
+    gap: Spacing.xs,
+  },
+  metaRowOwn: {
+    justifyContent: 'flex-end',
+    marginRight: Spacing.xs,
+  },
+  metaRowOther: {
+    justifyContent: 'flex-start',
+    marginLeft: Spacing.xs,
+  },
+  failedText: {
+    fontFamily: FontFamily.medium,
+    fontSize: FontSize.xs,
+    color: Colors.error,
+  },
   // Timestamp
   timestamp: {
     fontFamily: FontFamily.regular,
     fontSize: FontSize.xs,
     color: Colors.textMuted,
-    marginTop: Spacing.xs,
   },
   timestampOwn: {
     textAlign: 'right',
-    marginRight: Spacing.xs,
   },
   timestampOther: {
     textAlign: 'left',
-    marginLeft: Spacing.xs,
   },
 
   // System message

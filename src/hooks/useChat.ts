@@ -19,50 +19,53 @@ interface UseChatOptions {
 
 export const useChat = ({ roomType, roomId }: UseChatOptions) => {
   const user = useAuthStore((state) => state.user);
-  const {
-    rooms,
-    isConnected,
-    initRoom,
-    setMessages,
-    addMessage,
-    prependMessages,
-    setRoomLoading,
-    addOptimisticMessage,
-    confirmMessage,
-    failMessage,
-    setUserTyping,
-  } = useChatStore();
+
+  // BUG 10: Only destructure state values needed for rendering — not actions.
+  // Actions are accessed via useChatStore.getState() inside callbacks to keep deps stable.
+  const room = useChatStore((state) => state.rooms[roomId]);
+  const isConnected = useChatStore((state) => state.isConnected);
 
   const [error, setError] = useState<string | null>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isTypingRef = useRef(false);
 
-  // Get room data
-  const room = rooms.get(roomId);
+  // Derive room data
   const messages = room?.messages ?? [];
   const hasMore = room?.hasMore ?? true;
   const isLoading = room?.isLoading ?? false;
-  const typingUsers = room?.typingUsers ?? new Map();
+  const typingUsers = room?.typingUsers ?? {};
 
+  // BUG 9: Guard — skip all socket/fetch operations if roomId is empty
   // Initialize room on mount
   useEffect(() => {
-    initRoom(roomId, roomType);
+    if (!roomId) return;
+
+    useChatStore.getState().initRoom(roomId, roomType);
     socketService.joinRoom(roomType, roomId);
 
     return () => {
       socketService.leaveRoom(roomType, roomId);
+      // BUG 18: Clear typing timeout on unmount
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = null;
+      }
       // Clear typing indicator on unmount
       if (isTypingRef.current) {
         socketService.sendTyping(roomType, roomId, false);
+        isTypingRef.current = false;
       }
     };
-  }, [roomId, roomType, initRoom]);
+  }, [roomId, roomType]);
 
   /**
    * Fetch initial messages
+   * BUG 10: Stable deps — only roomId and roomType. Actions via getState().
    */
   const fetchMessages = useCallback(async () => {
-    setRoomLoading(roomId, true);
+    if (!roomId) return;
+
+    useChatStore.getState().setRoomLoading(roomId, true);
     setError(null);
 
     try {
@@ -73,25 +76,28 @@ export const useChat = ({ roomType, roomId }: UseChatOptions) => {
               limit: AppConfig.MESSAGE_PAGE_SIZE,
             });
 
-      setMessages(roomId, result.messages.reverse(), result.hasMore);
+      useChatStore.getState().setMessages(roomId, result.messages, result.hasMore);
     } catch (err) {
       const apiError = err as ApiError;
       setError(apiError.message);
+      useChatStore.getState().setMessages(roomId, [], false);
     } finally {
-      setRoomLoading(roomId, false);
+      useChatStore.getState().setRoomLoading(roomId, false);
     }
-  }, [roomId, roomType, setMessages, setRoomLoading]);
+  }, [roomId, roomType]);
 
   /**
    * Load more (older) messages
+   * BUG 29: On error, don't call prependMessages — leave hasMore unchanged so user can retry
    */
   const loadMore = useCallback(async () => {
-    if (!hasMore || isLoading || messages.length === 0) return;
+    const currentRoom = useChatStore.getState().rooms[roomId];
+    if (!currentRoom || !currentRoom.hasMore || currentRoom.isLoading || currentRoom.messages.length === 0) return;
 
-    setRoomLoading(roomId, true);
+    useChatStore.getState().setRoomLoading(roomId, true);
 
     try {
-      const oldestMessage = messages[0];
+      const oldestMessage = currentRoom.messages[currentRoom.messages.length - 1];
       const result =
         roomType === 'circle'
           ? await circlesService.getMessages({
@@ -103,21 +109,21 @@ export const useChat = ({ roomType, roomId }: UseChatOptions) => {
               limit: AppConfig.MESSAGE_PAGE_SIZE,
             });
 
-      prependMessages(roomId, result.messages.reverse(), result.hasMore);
+      useChatStore.getState().prependMessages(roomId, result.messages, result.hasMore);
     } catch (err) {
       const apiError = err as ApiError;
       setError(apiError.message);
-    } finally {
-      setRoomLoading(roomId, false);
+      // BUG 29: Don't set hasMore to false on error — just stop loading
+      useChatStore.getState().setRoomLoading(roomId, false);
     }
-  }, [roomId, roomType, hasMore, isLoading, messages, prependMessages, setRoomLoading]);
+  }, [roomId, roomType]);
 
   /**
    * Send a message
    */
   const sendMessage = useCallback(
     async (content: string) => {
-      if (!content.trim() || !user) return;
+      if (!content.trim() || !user || !roomId) return;
 
       // Create optimistic message
       const tempId = `temp-${Date.now()}`;
@@ -133,7 +139,7 @@ export const useChat = ({ roomType, roomId }: UseChatOptions) => {
         createdAt: new Date().toISOString(),
       };
 
-      addOptimisticMessage(roomId, optimisticMessage);
+      useChatStore.getState().addOptimisticMessage(roomId, optimisticMessage);
 
       // Clear typing indicator
       if (isTypingRef.current) {
@@ -147,21 +153,23 @@ export const useChat = ({ roomType, roomId }: UseChatOptions) => {
             ? await circlesService.sendMessage(content.trim())
             : await activitiesService.sendMessage(roomId, content.trim());
 
-        confirmMessage(roomId, tempId, confirmedMessage);
+        useChatStore.getState().confirmMessage(roomId, tempId, confirmedMessage);
       } catch (err) {
-        failMessage(roomId, tempId);
+        useChatStore.getState().failMessage(roomId, tempId);
         const apiError = err as ApiError;
         setError(apiError.message);
         throw err;
       }
     },
-    [roomId, roomType, user, addOptimisticMessage, confirmMessage, failMessage]
+    [roomId, roomType, user]
   );
 
   /**
    * Handle typing indicator
    */
   const handleTyping = useCallback(() => {
+    if (!roomId) return;
+
     if (!isTypingRef.current) {
       isTypingRef.current = true;
       socketService.sendTyping(roomType, roomId, true);
@@ -182,7 +190,7 @@ export const useChat = ({ roomType, roomId }: UseChatOptions) => {
   }, [roomType, roomId]);
 
   // Get typing users as array
-  const typingUsersList = Array.from(typingUsers.values())
+  const typingUsersList = Object.values(typingUsers)
     .filter((u) => Date.now() - u.timestamp < AppConfig.TYPING_INDICATOR_TIMEOUT)
     .map((u) => u.displayName);
 

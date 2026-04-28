@@ -40,9 +40,7 @@ export const useCircle = () => {
         setCircle(result.circle);
         setMembers(result.members);
         setCurrentPrompt(result.prompt);
-
-        // Join circle chat room
-        socketService.joinRoom('circle', result.circle.id);
+        // BUG 17: Removed joinRoom here — room joining is handled by useChat with proper cleanup
       } else {
         setCircle(null);
         setMembers([]);

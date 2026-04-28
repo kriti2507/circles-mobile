@@ -9,18 +9,25 @@ import { activitiesService } from '../services';
 import type { Activity, CreateActivityData } from '../types';
 import type { ApiError } from '../services/api';
 
+interface LocationOverride {
+  latitude: number;
+  longitude: number;
+}
+
 export const useActivities = () => {
   const {
     activities,
     myActivities,
     currentActivity,
-    isLoading,
+    isListLoading,
+    isDetailLoading,
     isRefreshing,
     filters,
     setActivities,
     setMyActivities,
     setCurrentActivity,
-    setIsLoading,
+    setIsListLoading,
+    setIsDetailLoading,
     setIsRefreshing,
     setFilters,
     addActivity,
@@ -32,10 +39,17 @@ export const useActivities = () => {
 
   /**
    * Fetch nearby activities
+   * BUG 7: Read filters from getState() to avoid stale closure.
+   * Accepts optional locationOverride so caller can pass freshly obtained coords.
    */
   const fetchActivities = useCallback(
-    async (refresh = false) => {
-      if (!filters.latitude || !filters.longitude) {
+    async (refresh = false, locationOverride?: LocationOverride) => {
+      // Read latest filters from store, not from closure
+      const currentFilters = useActivityStore.getState().filters;
+      const lat = locationOverride?.latitude ?? currentFilters.latitude;
+      const lng = locationOverride?.longitude ?? currentFilters.longitude;
+
+      if (!lat || !lng) {
         setError('Location required to fetch activities');
         return;
       }
@@ -43,15 +57,15 @@ export const useActivities = () => {
       if (refresh) {
         setIsRefreshing(true);
       } else {
-        setIsLoading(true);
+        setIsListLoading(true);
       }
       setError(null);
 
       try {
         const result = await activitiesService.getActivities({
-          lat: filters.latitude,
-          lng: filters.longitude,
-          radius: filters.radius,
+          lat,
+          lng,
+          radius: currentFilters.radius,
           status: 'open',
         });
         setActivities(result.activities);
@@ -59,11 +73,11 @@ export const useActivities = () => {
         const apiError = err as ApiError;
         setError(apiError.message);
       } finally {
-        setIsLoading(false);
+        setIsListLoading(false);
         setIsRefreshing(false);
       }
     },
-    [filters, setActivities, setIsLoading, setIsRefreshing]
+    [setActivities, setIsListLoading, setIsRefreshing]
   );
 
   /**
@@ -71,7 +85,7 @@ export const useActivities = () => {
    */
   const fetchMyActivities = useCallback(
     async (type: 'hosting' | 'participating' = 'participating') => {
-      setIsLoading(true);
+      setIsListLoading(true);
       setError(null);
 
       try {
@@ -81,18 +95,19 @@ export const useActivities = () => {
         const apiError = err as ApiError;
         setError(apiError.message);
       } finally {
-        setIsLoading(false);
+        setIsListLoading(false);
       }
     },
-    [setMyActivities, setIsLoading]
+    [setMyActivities, setIsListLoading]
   );
 
   /**
    * Fetch activity details
+   * BUG 19: Uses isDetailLoading instead of shared isLoading
    */
   const fetchActivity = useCallback(
     async (activityId: string) => {
-      setIsLoading(true);
+      setIsDetailLoading(true);
       setError(null);
 
       try {
@@ -108,10 +123,10 @@ export const useActivities = () => {
         setError(apiError.message);
         throw err;
       } finally {
-        setIsLoading(false);
+        setIsDetailLoading(false);
       }
     },
-    [setCurrentActivity, setIsLoading]
+    [setCurrentActivity, setIsDetailLoading]
   );
 
   /**
@@ -230,7 +245,8 @@ export const useActivities = () => {
     myActivities,
     currentActivity,
     openActivities: activities.filter((a) => a.status === 'open'),
-    isLoading,
+    isLoading: isListLoading,
+    isDetailLoading,
     isRefreshing,
     filters,
     error,

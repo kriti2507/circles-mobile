@@ -13,8 +13,8 @@ interface EnvConfig {
 
 const ENV_CONFIG: Record<Environment, EnvConfig> = {
   development: {
-    API_URL: 'http://172.20.10.7:3000/api/v1',
-    SOCKET_URL: 'http://172.20.10.7:3000',
+    API_URL: process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api/v1',
+    SOCKET_URL: process.env.EXPO_PUBLIC_SOCKET_URL || 'http://localhost:3000',
     DEBUG: true,
   },
   staging: {

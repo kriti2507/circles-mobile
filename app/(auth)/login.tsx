@@ -39,9 +39,16 @@ export default function LoginScreen() {
 
   const isSignUp = mode === 'signup';
 
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const isEmailValid = emailRegex.test(email.trim());
+  const isPasswordLongEnough = password.length >= 8;
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const isPasswordValid = isPasswordLongEnough && hasUppercase && hasNumber;
+
   const isValid = isSignUp
-    ? email.length > 0 && password.length >= 6 && confirmPassword.length > 0
-    : email.length > 0 && password.length > 0;
+    ? isEmailValid && isPasswordValid && confirmPassword.length > 0
+    : isEmailValid && password.length > 0;
 
   const toggleMode = () => {
     setMode(isSignUp ? 'signin' : 'signup');
@@ -54,19 +61,30 @@ export default function LoginScreen() {
     setLocalError(null);
     setSuccessMessage(null);
 
-    if (isSignUp && password !== confirmPassword) {
-      setLocalError('Passwords do not match');
+    if (!isEmailValid) {
+      setLocalError('Please enter a valid email address');
       return;
+    }
+
+    if (isSignUp) {
+      if (!isPasswordValid) {
+        setLocalError('Password must be at least 8 characters with an uppercase letter and a number');
+        return;
+      }
+      if (password !== confirmPassword) {
+        setLocalError('Passwords do not match');
+        return;
+      }
     }
 
     try {
       if (isSignUp) {
-        const result = await signUp(email, password);
+        const result = await signUp(email.trim(), password);
         if (result && !result.token) {
           setSuccessMessage(result.message ?? 'Account created! Check your email to confirm.');
         }
       } else {
-        await signIn(email, password);
+        await signIn(email.trim(), password);
       }
     } catch {
       // Error is handled by the hook
@@ -125,6 +143,7 @@ export default function LoginScreen() {
             leftIcon={
               <Ionicons name="mail-outline" size={20} color={Colors.textMuted} />
             }
+            error={email.length > 0 && !isEmailValid ? 'Enter a valid email address' : undefined}
           />
 
           <Input
@@ -149,6 +168,20 @@ export default function LoginScreen() {
             }
             onRightIconPress={() => setShowPassword(!showPassword)}
           />
+
+          {isSignUp && password.length > 0 && (
+            <View style={styles.passwordRequirements}>
+              <Text style={[styles.requirementText, isPasswordLongEnough && styles.requirementMet]}>
+                {isPasswordLongEnough ? '\u2713' : '\u2022'} At least 8 characters
+              </Text>
+              <Text style={[styles.requirementText, hasUppercase && styles.requirementMet]}>
+                {hasUppercase ? '\u2713' : '\u2022'} One uppercase letter
+              </Text>
+              <Text style={[styles.requirementText, hasNumber && styles.requirementMet]}>
+                {hasNumber ? '\u2713' : '\u2022'} One number
+              </Text>
+            </View>
+          )}
 
           {isSignUp && (
             <Input
@@ -238,6 +271,18 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: Spacing.base,
+  },
+  passwordRequirements: {
+    paddingHorizontal: Spacing.base,
+    gap: 2,
+  },
+  requirementText: {
+    fontFamily: FontFamily.regular,
+    fontSize: FontSize.sm,
+    color: Colors.textMuted,
+  },
+  requirementMet: {
+    color: Colors.primary,
   },
   error: {
     fontFamily: FontFamily.medium,

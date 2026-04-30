@@ -8,11 +8,11 @@ import { useRouter } from 'expo-router';
 import { useAuthStore } from '../stores/authStore';
 import { authService, usersService } from '../services';
 import { socketService } from '../services/socket';
-import type { ApiError } from '../services/api';
+import { parseApiError } from '../services/api';
 
 export const useAuth = () => {
   const router = useRouter();
-  const { user, tokens, isAuthenticated, isOnboarded, login, logout, setIsLoading } =
+  const { user, tokens, isAuthenticated, isOnboarded, login, logout, setIsLoading, setTokens } =
     useAuthStore();
 
   const [isLoading, setLoading] = useState(false);
@@ -33,12 +33,15 @@ export const useAuth = () => {
         return result;
       }
 
-      // Auto-confirmed: full login flow
+      // Store tokens first so the Axios interceptor can attach them to subsequent requests
+      const newTokens = { accessToken: result.token, refreshToken: result.refreshToken! };
+      setTokens(newTokens);
+
       const profile = await usersService.getMe();
 
       login(
         profile.user,
-        { accessToken: result.token, refreshToken: result.refreshToken! },
+        newTokens,
         profile.settings
       );
 
@@ -48,13 +51,12 @@ export const useAuth = () => {
 
       return result;
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message);
+      setError(parseApiError(err).message);
       throw err;
     } finally {
       setLoading(false);
     }
-  }, [login, router]);
+  }, [login, setTokens, router]);
 
   /**
    * Sign in with email and password
@@ -67,20 +69,20 @@ export const useAuth = () => {
       try {
         const result = await authService.signIn(email, password);
 
-        // Get full user profile
+        // Store tokens first so the Axios interceptor can attach them to subsequent requests
+        const newTokens = { accessToken: result.token, refreshToken: result.refreshToken };
+        setTokens(newTokens);
+
         const profile = await usersService.getMe();
 
-        // Store auth state
         login(
           profile.user,
-          { accessToken: result.token, refreshToken: result.refreshToken },
+          newTokens,
           profile.settings
         );
 
-        // Connect to socket
         socketService.connect();
 
-        // Navigate based on onboarding status
         if (result.isNewUser || !profile.user.displayName) {
           router.replace('/(onboarding)/name');
         } else {
@@ -89,14 +91,13 @@ export const useAuth = () => {
 
         return result;
       } catch (err) {
-        const apiError = err as ApiError;
-        setError(apiError.message);
+        setError(parseApiError(err).message);
         throw err;
       } finally {
         setLoading(false);
       }
     },
-    [login, router]
+    [login, setTokens, router]
   );
 
   /**
